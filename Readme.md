@@ -1,4 +1,4 @@
-# PDF Marketplace
+# DocTrade
 DocTrade is a platform where users can easily buy and sell PDFs on topics they are passionate about. Whether it's educational material, research papers, or creative writing, users can upload and monetize their content, while buyers can find documents that align with their specific interests.
 
 ## Features
