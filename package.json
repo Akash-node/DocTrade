@@ -1,0 +1,15 @@
+{
+  "name": "doctrade",
+  "version": "1.0.0",
+  "description": "A place where you can sell your work",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "javascript",
+    "backend"
+  ],
+  "author": "Akash Negi",
+  "license": "ISC"
+}
