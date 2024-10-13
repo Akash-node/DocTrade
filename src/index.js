@@ -15,3 +15,9 @@ connectdb()
 .catch((err) => {
    console.log("MongoDB Connection Failed" , err)
 })
+
+app.get("/demo", (req,res) =>{
+    res.json({
+        message: "Hey there API is working"
+    })
+})
