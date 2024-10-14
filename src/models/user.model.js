@@ -19,10 +19,11 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      required: true,
+      // required: true,
       unique: true, // email must be unique
       trim: true,
       match: [/\S+@\S+\.\S+/, "Please use a valid email address"], // Email format validation
+      default: null
     },
     password: {
       type: String,
@@ -42,14 +43,16 @@ const userSchema = new Schema(
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"], // Allows only specific values for gender
-      required: true,
+      default: null
     },
     avatar: {
       type: String, // cloudinary url
-      required: true,
+      // required: true,
+      default: null
     },
     coverImage: {
       type: String, // cloudinary url
+      default: null
     },
     refreshToken: {
       type: String,
