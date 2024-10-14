@@ -19,7 +19,7 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      // required: true,
+      required: true,
       unique: true, // email must be unique
       trim: true,
       match: [/\S+@\S+\.\S+/, "Please use a valid email address"], // Email format validation
@@ -84,7 +84,7 @@ userSchema.methods.generateAccessToken = function () {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: (process.env = ACCESS_TOKEN_EXPIRY),
+      expiresIn: (process.env.ACCESS_TOKEN_EXPIRY),
     }
   ); 
 };
@@ -95,7 +95,7 @@ userSchema.methods.generateRefreshToken = function () {
     },
     process.env.REFRESH_TOKEN_SECERT,
     {
-      expiresIn: (process.env = REFRESH_TOKEN_EXPIRY),
+      expiresIn: (process.env.REFRESH_TOKEN_EXPIRY),
     }
   );
 };

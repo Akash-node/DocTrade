@@ -3,11 +3,34 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+//--------------Generate Refresh and Access Token-----------------------
+
+const generateRefreshAndAccessToken = async (userId) => {
+
+  try {
+    const user = await User.findById(userId)
+    const refreshToken = user.generateRefreshToken()
+    const accessToken = user.generateAccessToken()
+  
+    user.refreshToken = refreshToken;
+    await user.save({validateBeforeSave : false})
+  
+    return {refreshToken,accessToken}
+    
+  } catch (error) {
+    throw new ApiError(500, error)
+  }
+
+
+};
+
+//--------------Registration-----------------------
+
 const userRegister = asyncHandler(async (req, res) => {
-  const { fullName, userName, password, phoneNumber } = req.body;
+  const { fullName, userName, password, phoneNumber,email } = req.body;
 
   if (
-    [fullName, userName, password, phoneNumber].some(
+    [fullName, userName, password, phoneNumber,email].some(
       (field) => field?.trim() === ""
     )
   ) {
@@ -15,7 +38,7 @@ const userRegister = asyncHandler(async (req, res) => {
   }
 
   const userAlreadyExist = await User.findOne({
-    $or: [{ userName }, { phoneNumber }],
+    $or: [{ userName }, { phoneNumber }, {email}],
   });
 
   if (userAlreadyExist) {
@@ -26,7 +49,8 @@ const userRegister = asyncHandler(async (req, res) => {
     fullName,
     userName,
     password,
-    phoneNumber
+    phoneNumber,
+    email
   });
 
   const userCreated = await User.findById(user._id).select(
@@ -42,12 +66,76 @@ const userRegister = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, userCreated, "User Created Sucessfully"));
 });
 
-const getUsers = asyncHandler(async (req,res) => {
-  const users = await User.find().select("-password -refreshToken")
-  res.status(200).json(new ApiResponse(200,users, "Data Retrive"))
+//--------------Login-----------------------
+
+const userLogin = asyncHandler(async (req, res) => {
+  const { phoneNumber, userName, password, email } = req.body;
+
+  if (!phoneNumber && !userName && !email) {
+    throw new ApiError(400, "Phone Number or User name or Email is Required");
+  }
+
+  const user = await User.findOne({
+    $or: [{ phoneNumber }, { userName }, {email}],
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User Doesn't Exist");
+  }
+
+  const isPasswordvalid = await user.isPasswordCorrect(password);
+
+  if (!isPasswordvalid) {
+    throw new ApiError(401, "Invalid Credential");
+  }
+
+
+const {refreshToken,accessToken} = await generateRefreshAndAccessToken(user._id)
+
+const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+const option = {
+  httpOnly: true,
+  secure: true
+}
+
+res.status(200)
+.cookie("accessToken", accessToken,option)
+.cookie("refreshToken", refreshToken,option)
+.json(new ApiResponse(
+  200,
+  {
+    user: loggedInUser,accessToken,refreshToken
+  },
+  "User LoggedIn Successfully"
+))
+});
+
+//--------------Logout-----------------------
+
+const userLogout = asyncHandler(async (req,res) =>{
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $unset: {
+        refreshToken: 1 // this removes the field from document
+    }
+    },
+    {
+      new: true
+    }
+  )
+
+  const option = {
+    httpOnly: true,
+    secure: true
+  }
+
+  return res.
+  status(200)
+  .clearCookie("accessToken", option)
+  .clearCookie("refreshToken", option).
+  json(new ApiResponse(200, {fullname : user.fullName}, "User logged out"))
 })
 
-
-
-
-export {userRegister, getUsers};
+export { userRegister, userLogin, userLogout };
